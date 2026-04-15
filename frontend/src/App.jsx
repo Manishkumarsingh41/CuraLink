@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import './index.css';
 
 function App() {
   const [disease, setDisease] = useState('');
@@ -64,19 +65,10 @@ function App() {
   };
 
   return (
-    <div style={{ maxWidth: '960px', margin: '0 auto', padding: '20px' }}>
+    <div>
       <h1>Curalink</h1>
 
-      <div
-        style={{
-          display: 'grid',
-          gap: '8px',
-          border: '1px solid #ddd',
-          borderRadius: '8px',
-          padding: '16px',
-          marginBottom: '16px',
-        }}
-      >
+      <div className="search-card">
         <label htmlFor="disease">Disease</label>
         <input
           id="disease"
@@ -84,7 +76,6 @@ function App() {
           value={disease}
           onChange={(e) => setDisease(e.target.value)}
           placeholder="e.g. lung cancer"
-          style={{ padding: '8px' }}
         />
 
         <label htmlFor="query">Query</label>
@@ -94,7 +85,6 @@ function App() {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="e.g. vitamin D"
-          style={{ padding: '8px' }}
         />
 
         <label htmlFor="location">Location</label>
@@ -104,71 +94,56 @@ function App() {
           value={location}
           onChange={(e) => setLocation(e.target.value)}
           placeholder="e.g. India"
-          style={{ padding: '8px' }}
         />
 
-        <button
-          type="button"
-          onClick={handleSearch}
-          disabled={loading}
-          style={{ width: '120px', padding: '10px' }}
-        >
+        <button type="button" onClick={handleSearch} disabled={loading}>
           {loading ? 'Searching...' : 'Search'}
         </button>
       </div>
 
-      {error ? <p style={{ color: 'crimson' }}>{error}</p> : null}
+      {error ? <p className="error">{error}</p> : null}
 
-      <section style={{ marginBottom: '20px' }}>
+      <section>
         <h2>AI Summary</h2>
-        <div
-          style={{
-            border: '1px solid #ddd',
-            borderRadius: '8px',
-            padding: '12px',
-            whiteSpace: 'pre-wrap',
-            lineHeight: 1.5,
-          }}
-        >
+        <div className="ai-summary">
           {aiSummary || 'Generating insights...'}
         </div>
       </section>
 
-      <section style={{ marginBottom: '20px' }}>
+      <section>
         <h2>Research Results</h2>
         {results?.length > 0 ? (
-          <div style={{ display: 'grid', gap: '12px' }}>
+          <div>
             {results.map((item, index) => (
-              <div
-                key={`${item.title || 'research'}-${index}`}
-                style={{ border: '1px solid #ddd', borderRadius: '8px', padding: '12px' }}
-              >
-                <h3 style={{ marginTop: 0 }}>{item.title || 'Untitled'}</h3>
-                <p>
-                  <strong>Source:</strong> {item.source || 'Unknown'}
-                </p>
-                <p>
-                  <strong>Year:</strong> {item.year ?? 'N/A'}
-                </p>
+              <div key={`${item.title || 'research'}-${index}`} className="result-card">
+                <span className="badge badge-source">{item.source || 'Unknown'}</span>
+                <span className="badge badge-year">{item.year ?? 'N/A'}</span>
+                <h3>{item.title || 'Untitled'}</h3>
                 <p>{item.abstract || 'No abstract available.'}</p>
+                <p>
+                  <strong>Authors:</strong> {item.authors || 'Unknown'}
+                </p>
+                {item.url ? (
+                  <p>
+                    <a href={item.url} target="_blank" rel="noreferrer">
+                      View paper
+                    </a>
+                  </p>
+                ) : null}
               </div>
             ))}
           </div>
         ) : (
-          <div style={{ display: 'grid', gap: '12px' }}>
+          <div>
             {fallbackResearch.map((item, index) => (
-              <div
-                key={`fallback-research-${index}`}
-                style={{ border: '1px solid #ddd', borderRadius: '8px', padding: '12px' }}
-              >
-                <h3 style={{ marginTop: 0 }}>{item.title}</h3>
-                <p>
-                  <strong>Source:</strong> {item.source}
-                </p>
-                <p>
-                  <strong>Year:</strong> {item.year}
-                </p>
+              <div key={`fallback-research-${index}`} className="result-card">
+                <span className="badge badge-source">{item.source}</span>
+                <span className="badge badge-year">{item.year}</span>
+                <h3>{item.title}</h3>
                 <p>{item.abstract}</p>
+                <p>
+                  <strong>Authors:</strong> Unknown
+                </p>
               </div>
             ))}
           </div>
@@ -178,16 +153,11 @@ function App() {
       <section>
         <h2>Clinical Trials</h2>
         {clinicalTrials?.length > 0 ? (
-          <div style={{ display: 'grid', gap: '12px' }}>
+          <div>
             {clinicalTrials.map((trial, index) => (
-              <div
-                key={`${trial.title || 'trial'}-${index}`}
-                style={{ border: '1px solid #ddd', borderRadius: '8px', padding: '12px' }}
-              >
-                <h3 style={{ marginTop: 0 }}>{trial.title || 'Untitled trial'}</h3>
-                <p>
-                  <strong>Status:</strong> {trial.status || 'Unknown'}
-                </p>
+              <div key={`${trial.title || 'trial'}-${index}`} className="result-card">
+                <span className="badge badge-trial">{trial.status || 'Unknown'}</span>
+                <h3>{trial.title || 'Untitled trial'}</h3>
                 <p>
                   <strong>Location:</strong> {trial.locations || 'N/A'}
                 </p>
@@ -198,16 +168,11 @@ function App() {
             ))}
           </div>
         ) : (
-          <div style={{ display: 'grid', gap: '12px' }}>
+          <div>
             {fallbackTrials.map((trial, index) => (
-              <div
-                key={`fallback-trial-${index}`}
-                style={{ border: '1px solid #ddd', borderRadius: '8px', padding: '12px' }}
-              >
-                <h3 style={{ marginTop: 0 }}>{trial.title}</h3>
-                <p>
-                  <strong>Status:</strong> {trial.status}
-                </p>
+              <div key={`fallback-trial-${index}`} className="result-card">
+                <span className="badge badge-trial">{trial.status}</span>
+                <h3>{trial.title}</h3>
                 <p>
                   <strong>Location:</strong> {trial.locations}
                 </p>
