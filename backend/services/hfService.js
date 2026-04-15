@@ -22,6 +22,11 @@ function stripPromptEcho(generatedText, prompt) {
 
 async function generateLLMResponse(data) {
   try {
+    if (!process.env.HF_API_KEY) {
+      console.error('HF_API_KEY is missing. Set it in backend/.env');
+      return AI_FALLBACK_MESSAGE;
+    }
+
     const { disease, query, research, clinicalTrials } = data || {};
 
     const topResearch = (research || []).slice(0, 3);

@@ -1,0 +1,10 @@
+{
+  "name": "curalink",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "backend": "npm --prefix backend run start",
+    "frontend": "npm --prefix frontend run dev",
+    "build": "npm --prefix frontend run build"
+  }
+}
