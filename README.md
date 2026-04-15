@@ -143,11 +143,3 @@ Frontend white page:
 - Open the exact Vite URL shown in terminal.
 - Hard refresh browser (Ctrl+F5).
 
-## Security
-
-- Do not push real API keys.
-- Keep backend/.env out of git.
-
-## License
-
-You can add MIT license (or your preferred license) before final public release.
