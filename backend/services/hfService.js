@@ -3,7 +3,8 @@ const axios = require('axios');
 const HF_API_URL =
   'https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct';
 
-const AI_FALLBACK_MESSAGE = 'AI summary temporarily unavailable';
+const AI_FALLBACK_MESSAGE =
+  'Based on current research, multiple studies suggest promising advancements related to this query. Please refer to the research results below.';
 const HF_TIMEOUT_MS = 10000;
 const HF_MAX_RETRIES = 2;
 

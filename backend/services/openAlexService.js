@@ -28,7 +28,9 @@ async function fetchOpenAlex(query, maxResults = 100) {
       .slice(0, maxResults)
       .map((item) => ({
         title: item.title,
-        abstract: decodeOpenAlexAbstract(item.abstract_inverted_index),
+        abstract:
+          decodeOpenAlexAbstract(item.abstract_inverted_index) ||
+          'No abstract available',
         authors: item.authorships?.[0]?.author?.display_name,
         year: item.publication_year,
         url: item.primary_location?.landing_page_url,

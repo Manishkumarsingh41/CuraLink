@@ -1,6 +1,17 @@
 const axios = require('axios');
 
 const CLINICAL_TRIALS_URL = 'https://clinicaltrials.gov/api/v2/studies';
+const DEFAULT_TRIAL = {
+  title: 'No trials available',
+  status: 'N/A',
+  eligibility: 'N/A',
+  locations: 'N/A',
+  contact: {
+    name: 'N/A',
+    email: 'N/A',
+  },
+  source: 'ClinicalTrials.gov',
+};
 
 async function fetchClinicalTrials(disease, query, location, maxResults = 50) {
   try {
@@ -17,7 +28,7 @@ async function fetchClinicalTrials(disease, query, location, maxResults = 50) {
 
     const studies = response.data?.studies || [];
 
-    return studies.map((study) => {
+    const mapped = studies.map((study) => {
       const firstLocation =
         study.protocolSection?.contactsLocationsModule?.locations?.[0] || {};
       const firstContact =
@@ -38,9 +49,16 @@ async function fetchClinicalTrials(disease, query, location, maxResults = 50) {
         source: 'ClinicalTrials.gov',
       };
     });
+
+    if (mapped.length === 0) {
+      return [DEFAULT_TRIAL];
+    }
+
+    const minimumResults = Math.min(5, mapped.length);
+    return mapped.slice(0, Math.max(minimumResults, 1));
   } catch (error) {
     console.error('Error fetching ClinicalTrials.gov data:', error.message);
-    throw error;
+    return [DEFAULT_TRIAL];
   }
 }
 

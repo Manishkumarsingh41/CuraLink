@@ -6,7 +6,9 @@ function rankResearchPapers(researchPapers, query) {
     .map((keyword) => keyword.replace(/[^a-z0-9]/g, ''))
     .filter(Boolean);
 
-  return [...(researchPapers || [])]
+  const input = [...(researchPapers || [])];
+
+  const ranked = input
     .map((paper) => {
       const titleText = String(paper?.title || '').toLowerCase();
       const abstractText = String(paper?.abstract || '').toLowerCase();
@@ -37,6 +39,15 @@ function rankResearchPapers(researchPapers, query) {
       };
     })
     .sort((a, b) => b.score - a.score);
+
+  if (ranked.length > 0) {
+    return ranked;
+  }
+
+  return input.map((paper) => ({
+    ...paper,
+    score: Number.isFinite(Number(paper?.score)) ? Number(paper.score) : 0,
+  }));
 }
 
 module.exports = { rankResearchPapers };

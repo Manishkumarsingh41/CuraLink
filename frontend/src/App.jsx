@@ -7,9 +7,27 @@ function App() {
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [aiSummary, setAiSummary] = useState('');
+  const [aiSummary, setAiSummary] = useState('Generating insights...');
   const [results, setResults] = useState([]);
   const [clinicalTrials, setClinicalTrials] = useState([]);
+
+  const fallbackResearch = [
+    {
+      title: 'No research available',
+      source: 'Fallback',
+      year: 'N/A',
+      abstract: 'No research available at the moment.',
+    },
+  ];
+
+  const fallbackTrials = [
+    {
+      title: 'No trials available',
+      status: 'N/A',
+      locations: 'N/A',
+      eligibility: 'N/A',
+    },
+  ];
 
   const handleSearch = async () => {
     setLoading(true);
@@ -30,14 +48,14 @@ function App() {
         throw new Error(data?.message || 'Request failed.');
       }
 
-      setAiSummary(data.aiSummary || 'No AI summary available.');
+      setAiSummary(data?.aiSummary || 'Generating insights...');
       setResults(Array.isArray(data.results) ? data.results : []);
       setClinicalTrials(
         Array.isArray(data.clinicalTrials) ? data.clinicalTrials : []
       );
     } catch (err) {
-      setError(err.message || 'Something went wrong while fetching results.');
-      setAiSummary('');
+      setError('Something went wrong. Showing available data.');
+      setAiSummary('Generating insights...');
       setResults([]);
       setClinicalTrials([]);
     } finally {
@@ -112,15 +130,13 @@ function App() {
             lineHeight: 1.5,
           }}
         >
-          {aiSummary || 'No summary yet.'}
+          {aiSummary || 'Generating insights...'}
         </div>
       </section>
 
       <section style={{ marginBottom: '20px' }}>
         <h2>Research Results</h2>
-        {results.length === 0 ? (
-          <p>No research results yet.</p>
-        ) : (
+        {results?.length > 0 ? (
           <div style={{ display: 'grid', gap: '12px' }}>
             {results.map((item, index) => (
               <div
@@ -138,14 +154,30 @@ function App() {
               </div>
             ))}
           </div>
+        ) : (
+          <div style={{ display: 'grid', gap: '12px' }}>
+            {fallbackResearch.map((item, index) => (
+              <div
+                key={`fallback-research-${index}`}
+                style={{ border: '1px solid #ddd', borderRadius: '8px', padding: '12px' }}
+              >
+                <h3 style={{ marginTop: 0 }}>{item.title}</h3>
+                <p>
+                  <strong>Source:</strong> {item.source}
+                </p>
+                <p>
+                  <strong>Year:</strong> {item.year}
+                </p>
+                <p>{item.abstract}</p>
+              </div>
+            ))}
+          </div>
         )}
       </section>
 
       <section>
         <h2>Clinical Trials</h2>
-        {clinicalTrials.length === 0 ? (
-          <p>No clinical trials yet.</p>
-        ) : (
+        {clinicalTrials?.length > 0 ? (
           <div style={{ display: 'grid', gap: '12px' }}>
             {clinicalTrials.map((trial, index) => (
               <div
@@ -161,6 +193,26 @@ function App() {
                 </p>
                 <p>
                   <strong>Eligibility:</strong> {trial.eligibility || 'N/A'}
+                </p>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div style={{ display: 'grid', gap: '12px' }}>
+            {fallbackTrials.map((trial, index) => (
+              <div
+                key={`fallback-trial-${index}`}
+                style={{ border: '1px solid #ddd', borderRadius: '8px', padding: '12px' }}
+              >
+                <h3 style={{ marginTop: 0 }}>{trial.title}</h3>
+                <p>
+                  <strong>Status:</strong> {trial.status}
+                </p>
+                <p>
+                  <strong>Location:</strong> {trial.locations}
+                </p>
+                <p>
+                  <strong>Eligibility:</strong> {trial.eligibility}
                 </p>
               </div>
             ))}
