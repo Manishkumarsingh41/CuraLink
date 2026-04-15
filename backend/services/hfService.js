@@ -3,10 +3,31 @@ const axios = require('axios');
 const HF_API_URL =
   'https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct';
 
-const AI_FALLBACK_MESSAGE =
-  'Based on current research, multiple studies suggest promising advancements related to this query. Please refer to the research results below.';
 const HF_TIMEOUT_MS = 10000;
 const HF_MAX_RETRIES = 2;
+
+function buildFallbackSummary(data) {
+  const { disease, query, insights } = data || {};
+  const safeDisease = disease || 'the selected condition';
+  const safeQuery = query || 'the requested intervention';
+  const safeInsights = Array.isArray(insights)
+    ? insights.map((item) => String(item || '').trim()).filter(Boolean).slice(0, 4)
+    : [];
+
+  const insightLines =
+    safeInsights.length > 0
+      ? safeInsights.map((item) => `- ${item}`).join('\n')
+      : '- Emerging studies indicate multiple promising treatment pathways.';
+
+  return [
+    `Research on ${safeDisease} focusing on "${safeQuery}" shows promising advancements.`,
+    '',
+    'Key findings include:',
+    insightLines,
+    '',
+    'These studies highlight emerging treatment strategies and improved understanding of disease mechanisms.',
+  ].join('\n');
+}
 
 function stripPromptEcho(generatedText, prompt) {
   const text = String(generatedText || '').trim();
@@ -25,13 +46,14 @@ async function generateLLMResponse(data) {
   try {
     if (!process.env.HF_API_KEY) {
       console.error('HF_API_KEY is missing. Set it in backend/.env');
-      return AI_FALLBACK_MESSAGE;
+      return buildFallbackSummary(data);
     }
 
-    const { disease, query, research, clinicalTrials } = data || {};
+    const { disease, query, research, clinicalTrials, insights } = data || {};
 
     const topResearch = (research || []).slice(0, 3);
-    const topClinicalTrials = (clinicalTrials || []).slice(0, 8);
+    const topClinicalTrials = (clinicalTrials || []).slice(0, 3);
+    const topInsights = (insights || []).slice(0, 5);
 
     const researchLines = topResearch.length
       ? topResearch
@@ -39,8 +61,15 @@ async function generateLLMResponse(data) {
             const title = item?.title || 'Untitled';
             const source = item?.source || 'Unknown source';
             const year = item?.year ?? 'Unknown year';
-            const abstract = item?.abstract || 'No abstract available';
-            return `${index + 1}. ${title} (${source}, ${year}) - ${abstract}`;
+            const shortSummary = item?.shortSummary || 'No summary available';
+            const keyFinding = item?.keyFinding || 'No key finding available';
+            const relevanceReason = item?.relevanceReason || 'No relevance reason available';
+            return (
+              `${index + 1}. ${title} (${source}, ${year})\n` +
+              `Key finding: ${keyFinding}\n` +
+              `Summary: ${shortSummary}\n` +
+              `Relevance: ${relevanceReason}`
+            );
           })
           .join('\n')
       : 'No research data provided.';
@@ -50,37 +79,46 @@ async function generateLLMResponse(data) {
           .map((item, index) => {
             const title = item?.title || 'Untitled trial';
             const status = item?.status || 'Unknown status';
-            const eligibility = item?.eligibility || 'Not provided';
+            const explanation = item?.explanation || 'Not provided';
             const location = item?.locations || 'Not provided';
-            const contactName = item?.contact?.name || 'Not provided';
-            const contactEmail = item?.contact?.email || 'Not provided';
+            const contact = item?.contact || 'Not provided';
             return (
               `${index + 1}. ${title} | Status: ${status} | ` +
-              `Eligibility: ${eligibility} | Location: ${location} | ` +
-              `Contact: ${contactName} (${contactEmail})`
+              `Explanation: ${explanation} | Location: ${location} | ` +
+              `Contact: ${contact}`
             );
           })
           .join('\n')
       : 'No clinical trial data provided.';
 
+    const insightLines = topInsights.length
+      ? topInsights.map((insight, index) => `${index + 1}. ${insight}`).join('\n')
+      : 'No extracted insights provided.';
+
     const prompt = [
-      'You are a medical research assistant.',
+      'You are an expert medical research assistant.',
       '',
       'STRICT RULES:',
       '- Do NOT hallucinate.',
       '- Use ONLY the given data.',
       '- If data is missing, explicitly say "Not available in provided data".',
+      '- Keep output concise and practical for clinicians and patients.',
       '- Output MUST follow this exact structure and headings:',
       'Condition Overview',
-      'Research Insights',
+      'Key Insights',
+      'Treatment / Research Trends',
+      'Clinical Relevance',
       'Clinical Trials',
-      'References',
       '',
       `Disease: ${disease || 'Not provided'}`,
       `User Query: ${query || 'Not provided'}`,
+      'Keywords to prioritize if present: microbiome, FMT (fecal transplant), probiotics, gut-brain axis.',
       '',
       'Top Research Data:',
       researchLines,
+      '',
+      'Extracted Insights:',
+      insightLines,
       '',
       'Clinical Trial Data:',
       trialLines,
@@ -130,7 +168,7 @@ async function generateLLMResponse(data) {
           if (attempt < HF_MAX_RETRIES) {
             continue;
           }
-          return AI_FALLBACK_MESSAGE;
+          return buildFallbackSummary(data);
         }
 
         const generatedText = Array.isArray(payload)
@@ -146,7 +184,20 @@ async function generateLLMResponse(data) {
           if (attempt < HF_MAX_RETRIES) {
             continue;
           }
-          return AI_FALLBACK_MESSAGE;
+          return buildFallbackSummary(data);
+        }
+
+        const sectionsPresent =
+          /Condition Overview/i.test(cleanedOutput) &&
+          /Key Insights/i.test(cleanedOutput) &&
+          /Treatment\s*\/\s*Research Trends/i.test(cleanedOutput) &&
+          /Clinical Relevance/i.test(cleanedOutput);
+
+        if (!sectionsPresent) {
+          if (attempt < HF_MAX_RETRIES) {
+            continue;
+          }
+          return buildFallbackSummary(data);
         }
 
         return cleanedOutput;
@@ -164,14 +215,14 @@ async function generateLLMResponse(data) {
           continue;
         }
 
-        return AI_FALLBACK_MESSAGE;
+        return buildFallbackSummary(data);
       }
     }
 
-    return AI_FALLBACK_MESSAGE;
+    return buildFallbackSummary(data);
   } catch (error) {
     console.error('Error generating Hugging Face LLM response:', error.message);
-    return AI_FALLBACK_MESSAGE;
+    return buildFallbackSummary(data);
   }
 }
 

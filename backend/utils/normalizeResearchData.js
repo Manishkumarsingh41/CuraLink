@@ -6,9 +6,12 @@ function normalizeResearchData(rankedResearch) {
         ? String(item.authors)
         : 'Unknown';
 
-    const normalizedAbstract = item?.abstract
-      ? String(item.abstract)
-      : 'No abstract available';
+    // 🔥 CRITICAL FIX HERE
+    const normalizedAbstract =
+      item?.abstract ||
+      item?.summary ||
+      item?.title || // fallback to title
+      '';
 
     const parsedYear = Number.parseInt(String(item?.year ?? ''), 10);
     const normalizedYear = Number.isFinite(parsedYear) ? parsedYear : null;
@@ -17,11 +20,14 @@ function normalizeResearchData(rankedResearch) {
     const normalizedScore = Number.isFinite(parsedScore) ? parsedScore : 0;
 
     return {
+      id: item?.id ? String(item.id) : '',
       title: String(item?.title || ''),
-      abstract: normalizedAbstract,
+      abstract: String(normalizedAbstract), // ✅ always usable text
       authors: normalizedAuthors,
       year: normalizedYear,
       source: String(item?.source || ''),
+      link: item?.link ? String(item.link) : item?.url ? String(item.url) : '',
+      url: item?.url ? String(item.url) : item?.link ? String(item.link) : '',
       score: normalizedScore,
     };
   });

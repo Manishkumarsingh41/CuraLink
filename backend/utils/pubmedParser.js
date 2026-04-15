@@ -7,6 +7,10 @@ async function parsePubMedXML(xmlData) {
 
   return articles.map((article) => {
     const articleData = article?.MedlineCitation?.[0]?.Article?.[0];
+    const pubmedId =
+      article?.MedlineCitation?.[0]?.PMID?.[0]?._ ||
+      article?.MedlineCitation?.[0]?.PMID?.[0] ||
+      '';
 
     const titleRaw = articleData?.ArticleTitle?.[0];
     const title =
@@ -14,11 +18,13 @@ async function parsePubMedXML(xmlData) {
         ? titleRaw
         : titleRaw?._ || '';
 
-    const abstractParts = articleData?.Abstract?.[0]?.AbstractText || [];
-    const abstract = abstractParts
-      .map((part) => (typeof part === 'string' ? part : part?._ || ''))
-      .filter(Boolean)
-      .join(' ');
+    const abstractNodes = articleData?.Abstract?.[0]?.AbstractText || [];
+    const parsedAbstract = abstractNodes
+      .map((node) => (typeof node === 'string' ? node : node?._ || ''))
+      .join(' ')
+      .trim();
+    const abstract = parsedAbstract || 'No abstract available';
+    console.log('Parsed abstract:', abstract.slice(0, 100));
 
     const authors = (articleData?.AuthorList?.[0]?.Author || [])
       .map((author) => {
@@ -40,6 +46,7 @@ async function parsePubMedXML(xmlData) {
       '';
 
     return {
+      id: String(pubmedId || '').trim(),
       title,
       abstract,
       authors,

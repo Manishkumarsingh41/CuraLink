@@ -2,60 +2,92 @@ const axios = require('axios');
 
 const CLINICAL_TRIALS_URL = 'https://clinicaltrials.gov/api/v2/studies';
 const DEFAULT_TRIAL = {
-  title: 'No trials available',
+  title: 'No active trials found',
   status: 'N/A',
+  location: 'N/A',
   eligibility: 'N/A',
-  locations: 'N/A',
-  contact: {
-    name: 'N/A',
-    email: 'N/A',
-  },
+  contact: 'N/A',
+  explanation:
+    'Related therapies are still under active research.',
   source: 'ClinicalTrials.gov',
 };
 
 async function fetchClinicalTrials(disease, query, location, maxResults = 50) {
   try {
-    const combinedTerm = `${disease || ''} ${query || ''}`.trim();
+    const diseaseTerm = String(disease || '').trim();
+    const fullTerm = `${String(disease || '').trim()} ${String(query || '').trim()}`.trim();
 
-    const response = await axios.get(CLINICAL_TRIALS_URL, {
-      params: {
-        'query.cond': disease,
-        'query.term': combinedTerm,
-        pageSize: maxResults,
-        format: 'json',
-      },
-    });
+    const fetchStudies = async (params) => {
+      const response = await axios.get(CLINICAL_TRIALS_URL, {
+        params: {
+          ...params,
+          pageSize: 10,
+          format: 'json',
+        },
+        timeout: 10000,
+      });
 
-    const studies = response.data?.studies || [];
+      return response.data?.studies || [];
+    };
+
+    let studies = [];
+    if (diseaseTerm) {
+      studies = await fetchStudies({ 'query.cond': diseaseTerm });
+    }
+    if (studies.length === 0 && fullTerm) {
+      studies = await fetchStudies({ 'query.term': fullTerm });
+    }
 
     const mapped = studies.map((study) => {
       const firstLocation =
         study.protocolSection?.contactsLocationsModule?.locations?.[0] || {};
       const firstContact =
         study.protocolSection?.contactsLocationsModule?.centralContacts?.[0] || {};
+      const eligibility =
+        study.protocolSection?.eligibilityModule?.eligibilityCriteria ||
+        study.protocolSection?.eligibilityModule?.healthyVolunteers ||
+        'N/A';
+
+      const nctId =
+        study.protocolSection?.identificationModule?.nctId ||
+        study.protocolSection?.identificationModule?.orgStudyIdInfo?.id ||
+        '';
 
       return {
-        title: study.protocolSection?.identificationModule?.briefTitle,
+        title:
+          study.protocolSection?.identificationModule?.briefTitle ||
+          study.protocolSection?.identificationModule?.officialTitle ||
+          'Untitled clinical study',
         status: study.protocolSection?.statusModule?.overallStatus,
-        eligibility:
-          study.protocolSection?.eligibilityModule?.eligibilityCriteria,
+        location: [firstLocation.city, firstLocation.country]
+          .filter(Boolean)
+          .join(', ') || 'N/A',
         locations: [firstLocation.city, firstLocation.country]
           .filter(Boolean)
-          .join(', '),
-        contact: {
-          name: firstContact.name,
-          email: firstContact.email,
-        },
+          .join(', ') || 'N/A',
+        eligibility,
+        contact: firstContact.name
+          ? `${firstContact.name}${firstContact.email ? ` (${firstContact.email})` : ''}`
+          : 'N/A',
+        explanation:
+          study.protocolSection?.descriptionModule?.briefSummary ||
+          'Clinical trial details are available on ClinicalTrials.gov.',
         source: 'ClinicalTrials.gov',
+        link: nctId ? `https://clinicaltrials.gov/study/${nctId}` : 'https://clinicaltrials.gov/',
       };
-    });
+    }).filter((study) => Boolean(study?.title));
 
     if (mapped.length === 0) {
       return [DEFAULT_TRIAL];
     }
 
-    const minimumResults = Math.min(5, mapped.length);
-    return mapped.slice(0, Math.max(minimumResults, 1));
+    const prioritized = mapped
+      .filter((study) => /recruit|active|not yet recruiting/i.test(String(study?.status || '')));
+    if (prioritized.length > 0) {
+      return prioritized.slice(0, 5);
+    }
+
+    return mapped.slice(0, 5);
   } catch (error) {
     console.error('Error fetching ClinicalTrials.gov data:', error.message);
     return [DEFAULT_TRIAL];

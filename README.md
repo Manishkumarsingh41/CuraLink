@@ -142,5 +142,3 @@ Frontend white page:
 - Ensure npm run dev is running in frontend folder.
 - Open the exact Vite URL shown in terminal.
 - Hard refresh browser (Ctrl+F5).
-
-
