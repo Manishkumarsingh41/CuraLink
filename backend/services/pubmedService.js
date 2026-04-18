@@ -19,6 +19,7 @@ async function fetchPubMed(query, maxResults = 100, fallbackQuery = '') {
           retmode: 'json',
         },
         headers: pubmedHeaders,
+        timeout: 20000,
       });
 
     const primaryTerm = String(query || '').trim();
@@ -52,6 +53,7 @@ async function fetchPubMed(query, maxResults = 100, fallbackQuery = '') {
         retmode: 'xml',
       },
       headers: pubmedHeaders,
+      timeout: 20000,
     });
 
     return {

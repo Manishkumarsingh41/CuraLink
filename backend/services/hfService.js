@@ -3,7 +3,7 @@ const axios = require('axios');
 const HF_API_URL =
   'https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct';
 
-const HF_TIMEOUT_MS = 10000;
+const HF_TIMEOUT_MS = 20000;
 const HF_MAX_RETRIES = 2;
 
 function buildFallbackSummary(data) {

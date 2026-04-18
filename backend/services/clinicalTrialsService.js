@@ -24,7 +24,7 @@ async function fetchClinicalTrials(disease, query, location, maxResults = 50) {
           pageSize: 10,
           format: 'json',
         },
-        timeout: 10000,
+        timeout: 20000,
       });
 
       return response.data?.studies || [];

@@ -20,6 +20,7 @@ async function fetchOpenAlex(query, maxResults = 100, fallbackQuery = '') {
             page,
             sort: 'relevance_score:desc',
           },
+          timeout: 20000,
         });
       });
 
