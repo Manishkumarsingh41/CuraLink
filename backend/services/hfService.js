@@ -42,6 +42,53 @@ function stripPromptEcho(generatedText, prompt) {
   return text;
 }
 
+function normalizeInsightsPayload(rawOutput) {
+  const text = String(rawOutput || '').trim();
+  if (!text) {
+    return null;
+  }
+
+  const parseCandidates = [text];
+  const objectMatch = text.match(/\{[\s\S]*\}/);
+  if (objectMatch && objectMatch[0] !== text) {
+    parseCandidates.push(objectMatch[0]);
+  }
+
+  for (const candidate of parseCandidates) {
+    try {
+      const parsed = JSON.parse(candidate);
+      if (!parsed || typeof parsed !== 'object') {
+        continue;
+      }
+
+      const existingInsights = Array.isArray(parsed.insights) ? parsed.insights : null;
+      const keyInsights = Array.isArray(parsed.key_insights) ? parsed.key_insights : null;
+      const mergedInsights = existingInsights || keyInsights;
+
+      if (!Array.isArray(mergedInsights)) {
+        continue;
+      }
+
+      const normalizedInsights = mergedInsights
+        .map((item) => String(item || '').trim())
+        .filter(Boolean);
+
+      if (normalizedInsights.length === 0) {
+        continue;
+      }
+
+      return {
+        ...parsed,
+        insights: normalizedInsights,
+      };
+    } catch (error) {
+      continue;
+    }
+  }
+
+  return null;
+}
+
 async function generateLLMResponse(data) {
   try {
     if (!process.env.HF_API_KEY) {
@@ -96,23 +143,27 @@ async function generateLLMResponse(data) {
       : 'No extracted insights provided.';
 
     const prompt = [
-      'You are an expert medical research assistant.',
+      'You are an expert medical research analyst.',
       '',
-      'STRICT RULES:',
-      '- Do NOT hallucinate.',
-      '- Use ONLY the given data.',
-      '- If data is missing, explicitly say "Not available in provided data".',
-      '- Keep output concise and practical for clinicians and patients.',
-      '- Output MUST follow this exact structure and headings:',
-      'Condition Overview',
-      'Key Insights',
-      'Treatment / Research Trends',
-      'Clinical Relevance',
-      'Clinical Trials',
+      'Given multiple research papers (title + abstract), generate high-quality insights.',
+      '',
+      'Rules:',
+      '- Extract ONLY unique insights',
+      '- DO NOT use phrases like "study shows" or "research suggests"',
+      '- Combine similar findings into one strong insight',
+      '- Focus on real outcomes (survival, risk, progression, treatment effect)',
+      '- Avoid repetition completely',
+      '- Limit to 5-7 insights',
+      '',
+      'Output format:',
+      '{',
+      '  "key_insights": [',
+      '    "..."',
+      '  ]',
+      '}',
       '',
       `Disease: ${disease || 'Not provided'}`,
       `User Query: ${query || 'Not provided'}`,
-      'Keywords to prioritize if present: microbiome, FMT (fecal transplant), probiotics, gut-brain axis.',
       '',
       'Top Research Data:',
       researchLines,
@@ -123,7 +174,7 @@ async function generateLLMResponse(data) {
       'Clinical Trial Data:',
       trialLines,
       '',
-      'Now produce the final answer using the required headings only.',
+      'Return only the JSON object in the specified format.',
     ].join('\n');
 
     for (let attempt = 0; attempt <= HF_MAX_RETRIES; attempt += 1) {
@@ -185,6 +236,11 @@ async function generateLLMResponse(data) {
             continue;
           }
           return buildFallbackSummary(data);
+        }
+
+        const normalizedInsightsPayload = normalizeInsightsPayload(cleanedOutput);
+        if (normalizedInsightsPayload) {
+          return JSON.stringify(normalizedInsightsPayload);
         }
 
         const sectionsPresent =

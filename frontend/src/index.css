@@ -17,6 +17,9 @@ input::placeholder { color: #223344; }
 button { background: linear-gradient(135deg, #00c8b0 0%, #0094a8 100%); color: #000d18; border: none; border-radius: 8px; padding: 0.65rem 2rem; font-weight: 600; font-size: 0.85rem; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.08em; cursor: pointer; margin-top: 1.1rem; box-shadow: 0 4px 22px rgba(0,200,176,0.28); transition: transform 0.15s, box-shadow 0.15s; }
 button:hover { transform: translateY(-1px); box-shadow: 0 7px 30px rgba(0,200,176,0.42); }
 button:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+.action-row { display: flex; flex-wrap: wrap; gap: 0.7rem; }
+.action-row button { margin-top: 1.1rem; }
+.download-btn { background: linear-gradient(135deg, #00adca 0%, #0077a8 100%); }
 .search-card { background: rgba(255,255,255,0.025); border: 1px solid rgba(0,229,200,0.14); border-radius: 14px; padding: 1.6rem; margin-bottom: 1.5rem; box-shadow: 0 0 50px rgba(0,229,200,0.04), inset 0 1px 0 rgba(255,255,255,0.04); }
 .section { margin-top: 0.9rem; }
 .ai-summary { background: rgba(0,229,200,0.04); border: 1px solid rgba(0,229,200,0.18); border-left: 3px solid #00e5c8; border-radius: 0 10px 10px 0; padding: 1rem 1.3rem; margin-bottom: 1rem; font-size: 0.88rem; color: #80aabb; line-height: 1.7; font-style: italic; }

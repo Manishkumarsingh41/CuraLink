@@ -8,11 +8,21 @@ const { rankResearchPapers } = require('../utils/ranker');
 const { generateLLMResponse } = require('../services/hfService');
 
 const router = express.Router();
+const sessionContextStore = Object.create(null);
 
 function cleanText(text) {
   return String(text || '')
     .replace(/\s+/g, ' ')
     .trim();
+}
+
+function getSessionKey(req) {
+  const forwardedFor = String(req?.headers?.['x-forwarded-for'] || '')
+    .split(',')[0]
+    .trim();
+  const ip = forwardedFor || String(req?.ip || req?.socket?.remoteAddress || 'anonymous');
+  const userAgent = String(req?.headers?.['user-agent'] || 'unknown-agent');
+  return `${ip}|${userAgent}`;
 }
 
 function splitSentences(text) {
@@ -120,9 +130,9 @@ function summarizeResearch(paper, query, disease) {
 
   let keyFinding = 'Study provides insights into disease mechanisms';
   if (text.includes('improve') || text.includes('improvement')) {
-    keyFinding = 'Study shows improvement in symptoms';
+    keyFinding = 'Improvement in symptoms observed across evaluated studies';
   } else if (text.includes('reduce') || text.includes('reduction')) {
-    keyFinding = 'Study shows reduction in disease progression';
+    keyFinding = 'Reduction in disease progression observed in multiple studies';
   } else if (text.includes('amyloid')) {
     keyFinding = 'Study targets amyloid-beta pathology in Alzheimer\'s disease';
   } else if (text.includes('microbiome')) {
@@ -185,6 +195,121 @@ function buildDynamicAiSummary(disease, query, insights) {
     bulletInsights,
     '',
     'These studies highlight emerging treatment strategies and improved understanding of disease mechanisms.',
+  ].join('\n');
+}
+
+function personalizeSummaryText(summaryText, disease, location) {
+  const safeDisease = cleanText(disease) || 'the selected condition';
+  let text = String(summaryText || '').trim();
+
+  if (!text) {
+    return text;
+  }
+
+  text = text
+    .replace(/\bstudy shows improvement\b/gi, `improvement observed in ${safeDisease}`)
+    .replace(/\bresearch suggests\b/gi, `findings in ${safeDisease} suggest`)
+    .replace(/\bevidence indicates\b/gi, 'findings indicate');
+
+  if (!new RegExp(safeDisease.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i').test(text)) {
+    text = `For ${safeDisease}, ${text.charAt(0).toLowerCase()}${text.slice(1)}`;
+  }
+
+  const safeLocation = cleanText(location);
+  if (safeLocation && !/given region|similar populations/i.test(text)) {
+    text = `${text}\n\nIn the given region, these findings may be most relevant to similar populations.`;
+  }
+
+  return text;
+}
+
+function personalizeInsights(insights, disease, location) {
+  const safeDisease = cleanText(disease) || 'the selected condition';
+  const safeLocation = cleanText(location);
+
+  return (Array.isArray(insights) ? insights : []).map((insight, index) => {
+    let line = cleanText(insight);
+    if (!line) {
+      return line;
+    }
+
+    line = line
+      .replace(/\bstudy shows improvement\b/gi, 'improvement observed')
+      .replace(/\bresearch suggests\b/gi, 'findings suggest')
+      .replace(/\bevidence indicates\b/gi, 'findings indicate');
+
+    if (!new RegExp(safeDisease.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i').test(line)) {
+      line = `In ${safeDisease}, ${line.charAt(0).toLowerCase()}${line.slice(1)}`;
+    }
+
+    if (safeLocation && index === 0 && !/given region|similar populations/i.test(line)) {
+      line = `${line} In similar populations, this may be particularly relevant.`;
+    }
+
+    return line;
+  });
+}
+
+function formatFinalSummary(aiSummary, disease, query, insights, results, clinicalTrials) {
+  const safeDisease = cleanText(disease) || 'Not provided';
+  const safeQuery = cleanText(query) || 'Not provided';
+  const safeSummary = cleanText(aiSummary) || 'Summary not available.';
+  const safeInsights = (Array.isArray(insights) ? insights : [])
+    .map((item) => cleanText(item))
+    .filter(Boolean)
+    .slice(0, 5);
+  const safeResults = Array.isArray(results) ? results : [];
+  const safeTrials = Array.isArray(clinicalTrials) ? clinicalTrials : [];
+
+  const mostImportantPaper = safeResults[0] || null;
+  const otherPapers = safeResults.slice(1, 4);
+
+  const insightsBlock = safeInsights.length
+    ? safeInsights
+        .map((item) => `- ${item}\n  Why this matters: Relevant to ${safeDisease}.`)
+        .join('\n')
+    : '- No key insights available.\n  Why this matters: More evidence may be needed.';
+
+  const papersBlock = mostImportantPaper
+    ? [
+        `- Most important paper: ${cleanText(mostImportantPaper?.title) || 'Untitled study'} (${cleanText(mostImportantPaper?.source) || 'Unknown source'}, ${mostImportantPaper?.year ?? 'Unknown year'})`,
+        `  Why this matters: ${cleanText(mostImportantPaper?.relevanceReason) || 'Top-ranked evidence for this query.'}`,
+        ...otherPapers.map((paper) => {
+          const title = cleanText(paper?.title) || 'Untitled study';
+          const source = cleanText(paper?.source) || 'Unknown source';
+          const year = paper?.year ?? 'Unknown year';
+          const relevance = cleanText(paper?.relevanceReason) || 'Relevant supporting evidence.';
+          return `- ${title} (${source}, ${year})\n  Why this matters: ${relevance}`;
+        }),
+      ].join('\n')
+    : '- No research papers available.\n  Why this matters: Additional sources may be required.';
+
+  const trialsBlock = safeTrials.length
+    ? safeTrials
+        .slice(0, 3)
+        .map((trial) => {
+          const title = cleanText(trial?.title) || 'Untitled trial';
+          const status = cleanText(trial?.status) || 'Unknown status';
+          const explanation = cleanText(trial?.explanation) || 'Not available';
+          return `- ${title} | Status: ${status}\n  Why this matters: ${explanation}`;
+        })
+        .join('\n')
+    : '- No clinical trials available.\n  Why this matters: Trial data is currently limited.';
+
+  return [
+    'Condition Overview',
+    `- Condition: ${safeDisease}`,
+    `- Query Focus: ${safeQuery}`,
+    `- Why this matters: ${safeSummary}`,
+    '',
+    'Key Insights',
+    insightsBlock,
+    '',
+    'Research Papers',
+    papersBlock,
+    '',
+    'Clinical Trials',
+    trialsBlock,
   ].join('\n');
 }
 
@@ -299,9 +424,25 @@ function buildFallbackRawResearch(searchQuery) {
 router.post('/query', async (req, res) => {
   try {
     const { disease, query, location } = req.body;
-    const expanded = expandQuery(disease, query);
+    const sessionKey = getSessionKey(req);
+    const previousContext = sessionContextStore[sessionKey] || {};
+
+    const normalizedDiseaseInput = cleanText(disease);
+    const normalizedQueryInput = cleanText(query);
+
+    const effectiveDisease = normalizedDiseaseInput || cleanText(previousContext.disease);
+    const effectiveQuery = normalizedQueryInput;
+
+    if (effectiveDisease || effectiveQuery) {
+      sessionContextStore[sessionKey] = {
+        disease: effectiveDisease || '',
+        query: effectiveQuery || cleanText(previousContext.query),
+      };
+    }
+
+    const expanded = expandQuery(effectiveDisease, effectiveQuery);
     const expandedQuery = expanded.primary;
-    const searchQuery = `${String(disease || '').trim()} ${String(query || '').trim()} treatment research`
+    const searchQuery = `${String(effectiveDisease || '').trim()} ${String(effectiveQuery || '').trim()} treatment research`
       .replace(/\s+/g, ' ')
       .trim();
 
@@ -309,9 +450,9 @@ router.post('/query', async (req, res) => {
 
     const [pubmedTask, openAlexTask, clinicalTrialsTask] =
       await Promise.allSettled([
-        fetchPubMed(searchQuery, 100, disease),
-        fetchOpenAlex(searchQuery, 100, disease),
-        fetchClinicalTrials(disease, query, location, 50),
+        fetchPubMed(searchQuery, 100, effectiveDisease),
+        fetchOpenAlex(searchQuery, 100, effectiveDisease),
+        fetchClinicalTrials(effectiveDisease, effectiveQuery, location, 50),
       ]);
 
     if (pubmedTask.status === 'rejected') {
@@ -356,7 +497,7 @@ router.post('/query', async (req, res) => {
     const rankedResults = rankResearchPapers(combinedResults, expandedQuery);
     console.log('Sample paper before summarize:', rankedResults[0]);
     const processedResults = rankedResults.map((paper) =>
-      summarizeResearch(paper, query, disease)
+      summarizeResearch(paper, effectiveQuery, effectiveDisease)
     );
     const finalProcessedResults = ensureResearchCount(processedResults, expandedQuery);
     console.log('Final result sample:', finalProcessedResults[0]);
@@ -364,11 +505,11 @@ router.post('/query', async (req, res) => {
     const clinicalTrials = ensureClinicalTrials(clinicalTrialsResult);
     const insights = extractInsights(finalProcessedResults);
 
-    let aiResponse = buildDynamicAiSummary(disease, query, insights);
+    let aiResponse = buildDynamicAiSummary(effectiveDisease, effectiveQuery, insights);
     try {
       const llmSummary = await generateLLMResponse({
-        disease,
-        query,
+        disease: effectiveDisease,
+        query: effectiveQuery,
         research: finalProcessedResults,
         clinicalTrials,
         insights,
@@ -378,19 +519,30 @@ router.post('/query', async (req, res) => {
       }
     } catch (aiError) {
       console.error('AI summary generation failed:', aiError.message);
-      aiResponse = buildDynamicAiSummary(disease, query, insights);
+      aiResponse = buildDynamicAiSummary(effectiveDisease, effectiveQuery, insights);
     }
 
     if (!String(aiResponse || '').trim()) {
-      aiResponse = buildDynamicAiSummary(disease, query, insights);
+      aiResponse = buildDynamicAiSummary(effectiveDisease, effectiveQuery, insights);
     }
+
+    const personalizedInsights = personalizeInsights(insights, effectiveDisease, location);
+    const personalizedAiResponse = personalizeSummaryText(aiResponse, effectiveDisease, location);
+    const formattedAiResponse = formatFinalSummary(
+      personalizedAiResponse,
+      effectiveDisease,
+      effectiveQuery,
+      personalizedInsights,
+      finalProcessedResults,
+      clinicalTrials
+    );
 
     console.log('Final results:', finalProcessedResults.length);
 
     return res.json({
       success: true,
-      aiSummary: aiResponse,
-      insights,
+      aiSummary: formattedAiResponse,
+      insights: personalizedInsights,
       results: finalProcessedResults,
       clinicalTrials,
     });
