@@ -1,144 +1,233 @@
-# Curalink
+# 🚀 Curalink — AI Medical Research Assistant
 
-Curalink is a simple medical research assistant project built with Node.js + React.
-You enter a disease, query, and location, and it returns:
+Curalink is an AI-powered medical research assistant built using the MERN stack and open-source LLMs.
 
-- top research papers
-- clinical trial matches
-- an optional AI summary
+It allows users to input a **disease, query, and location**, and returns:
 
-## What This Project Does
+* 📄 Research papers (PubMed + OpenAlex)
+* 🧪 Clinical trials (ClinicalTrials.gov)
+* 🧠 AI-generated structured insights
+* 📥 Downloadable PDF report
 
-When you click Search on the frontend:
+---
 
-1. The backend expands your query.
-2. It fetches data from PubMed and OpenAlex.
-3. It fetches trial data from ClinicalTrials.gov.
-4. It ranks and cleans research results.
-5. It tries to generate a summary with Hugging Face.
-6. It returns everything in one response.
+## 🌐 Live Demo
 
-If AI summary fails, results still come back.
+* 🔗 Frontend: https://cura-link-gamma.vercel.app/
+* 🔗 Backend API: https://curalink-backend-7h86.onrender.com
 
-## Tech Stack
+> ⚠️ Note: Backend is hosted on a free instance, so the first request may take a few seconds to respond.
 
-Backend:
+---
 
-- Node.js
-- Express
-- Axios
-- dotenv
-- xml2js
+## 🧠 What This Project Does
 
-Frontend:
+When a user clicks **Search**:
 
-- React
-- Vite
+1. The system expands the query intelligently
+2. Fetches research papers from:
 
-## Folder Structure
+   * PubMed
+   * OpenAlex
+3. Fetches clinical trials from ClinicalTrials.gov
+4. Ranks results based on:
+
+   * relevance
+   * recency
+   * source credibility
+5. Sends top results to an open-source LLM
+6. Generates:
+
+   * structured AI summary
+   * non-repetitive key insights
+7. Returns everything in a single response
+
+---
+
+## ⚙️ Tech Stack
+
+### Backend:
+
+* Node.js
+* Express
+* Axios
+* dotenv
+* xml2js
+
+### Frontend:
+
+* React
+* Vite
+
+### AI / Data:
+
+* Hugging Face (LLM)
+* PubMed API
+* OpenAlex API
+* ClinicalTrials.gov API
+
+---
+
+## 📁 Project Structure
 
 ```text
 Curalink/
-  backend/
-    routes/
-    services/
-    utils/
-    server.js
-  frontend/
-    src/
-    index.html
-  README.md
+│
+├── backend/
+│   ├── routes/
+│   ├── services/
+│   ├── utils/
+│   ├── server.js
+│   └── .env
+│
+├── frontend/
+│   ├── src/
+│   ├── index.html
+│   └── vite.config.js
+│
+└── README.md
 ```
 
-## Setup
+---
+
+## 🛠️ Local Setup
 
 ### Prerequisites
 
-- Node.js 18+
-- npm
+* Node.js (v18+)
+* npm
 
-### Install dependencies
+---
 
-```powershell
-cd C:\Users\singh\OneDrive\Desktop\Curalink\backend
+### Install Dependencies
+
+```bash
+cd backend
 npm install
 
-cd ..\frontend
+cd ../frontend
 npm install
 ```
 
-## Environment Variable
+---
 
-Create file backend/.env:
+### Environment Variables
+
+Create `backend/.env`:
 
 ```env
 HF_API_KEY=your_huggingface_token
 PORT=5000
 ```
 
-## Run the Project
+---
 
-Use two terminals.
+### Run Locally
 
-Terminal 1 (backend):
+#### Terminal 1 (Backend)
 
-```powershell
-cd C:\Users\singh\OneDrive\Desktop\Curalink\backend
+```bash
+cd backend
 node server.js
 ```
 
-Terminal 2 (frontend):
+#### Terminal 2 (Frontend)
 
-```powershell
-cd C:\Users\singh\OneDrive\Desktop\Curalink\frontend
+```bash
+cd frontend
 npm run dev
 ```
 
-Open the URL shown in terminal (usually http://127.0.0.1:5173).
+👉 Open: http://127.0.0.1:5173
 
-## API
+---
 
-### POST /api/research/query
+## 🔌 API Endpoint
 
-Request body:
+### POST `/api/research/query`
+
+#### Request:
 
 ```json
 {
-  "disease": "Parkinson disease",
-  "query": "deep brain stimulation",
-  "location": "New York"
+  "disease": "Lung cancer",
+  "query": "immunotherapy",
+  "location": "India"
 }
 ```
 
-Response includes:
+---
 
-- success
-- expandedQuery
-- results
-- clinicalTrials
-- aiSummary
+#### Response Includes:
 
-If summary generation fails, aiSummary returns:
+* `expandedQuery`
+* `results` (research papers)
+* `clinicalTrials`
+* `aiSummary`
+* `insights`
 
-```text
-AI summary temporarily unavailable
-```
+---
 
-## Reliability Notes
+## ✨ Key Features
 
-- Source APIs are called in parallel.
-- Partial failures are handled safely.
-- Research results are returned even if AI fails.
-- Hugging Face call has retries and timeout.
+* 🔍 Deep research retrieval (50–300 candidates → ranked top results)
+* 🧠 AI-powered insight generation (non-generic, structured)
+* 🔄 Context-aware follow-up questions
+* 📊 Intelligent ranking system
+* 📥 PDF report generation
+* 🧩 Modular backend architecture
 
-## Common Issues
+---
 
-Backend not starting:
+## ⚠️ Reliability Notes
 
-- Make sure you are inside backend folder before running node server.js.
+* APIs are called in parallel
+* Timeout and retry handling implemented
+* Partial failures handled gracefully
+* Fallback ensures system never breaks
 
-Frontend white page:
+---
 
-- Ensure npm run dev is running in frontend folder.
-- Open the exact Vite URL shown in terminal.
-- Hard refresh browser (Ctrl+F5).
+## 🐞 Common Issues
+
+### Backend slow on first request
+
+* Due to free hosting (Render)
+* Solution: Open backend URL once before use
+
+---
+
+### No data showing
+
+* Check API connectivity
+* Ensure environment variables are set
+
+---
+
+## 🏆 Project Highlights
+
+This is not just a chatbot.
+
+👉 It is a **research + retrieval + reasoning system** that:
+
+* fetches real medical data
+* ranks it intelligently
+* and converts it into useful insights
+
+---
+
+## 📌 Future Improvements
+
+* Vector search + embeddings
+* Better personalization
+* Advanced filtering
+* Multi-language support
+
+---
+
+## 🙌 Acknowledgement
+
+Built as part of the **Curalink AI Hackathon**
+Focused on real-world AI system design and implementation.
+
+---
