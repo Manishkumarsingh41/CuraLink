@@ -21,10 +21,5 @@ app.use('/api/research', require('./routes/research'));
 
 // ✅ Dynamic port log (fix)
 app.listen(PORT, () => {
-<<<<<<< HEAD
   console.log(`Curalink server running on port ${PORT}`);
 });
-=======
-  console.log('Curalink server running on port 5000');
-});
->>>>>>> 04e9e96 (final fix: pubmed header + insight improvement)
