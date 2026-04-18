@@ -148,10 +148,11 @@ async function generateLLMResponse(data) {
       'Given multiple research papers (title + abstract), generate high-quality insights.',
       '',
       'Rules:',
-      '- Extract ONLY unique insights',
-      '- DO NOT use phrases like "study shows" or "research suggests"',
+      '- Each insight must be unique',
+      '- No repetition of the same meaning across insights',
+      '- DO NOT use phrases like "improvement in symptoms", "research suggests", or "study shows"',
       '- Combine similar findings into one strong insight',
-      '- Focus on real outcomes (survival, risk, progression, treatment effect)',
+      '- Prefer specific outcomes, mechanisms, treatment comparisons, and risks/limitations',
       '- Avoid repetition completely',
       '- Limit to 5-7 insights',
       '',
@@ -174,7 +175,7 @@ async function generateLLMResponse(data) {
       'Clinical Trial Data:',
       trialLines,
       '',
-      'Return only the JSON object in the specified format.',
+      'Return ONLY JSON in the specified format.',
     ].join('\n');
 
     for (let attempt = 0; attempt <= HF_MAX_RETRIES; attempt += 1) {

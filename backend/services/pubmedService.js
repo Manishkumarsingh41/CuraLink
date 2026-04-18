@@ -5,6 +5,10 @@ const EFETCH_URL = 'https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi';
 
 async function fetchPubMed(query, maxResults = 100, fallbackQuery = '') {
   try {
+    const pubmedHeaders = {
+      'User-Agent': 'Curalink-App/1.0 (contact@example.com)',
+    };
+
     const searchWithTerm = async (term) =>
       axios.get(ESEARCH_URL, {
         params: {
@@ -14,6 +18,7 @@ async function fetchPubMed(query, maxResults = 100, fallbackQuery = '') {
           sort: 'pub date',
           retmode: 'json',
         },
+        headers: pubmedHeaders,
       });
 
     const primaryTerm = String(query || '').trim();
@@ -46,6 +51,7 @@ async function fetchPubMed(query, maxResults = 100, fallbackQuery = '') {
         id: ids.join(','),
         retmode: 'xml',
       },
+      headers: pubmedHeaders,
     });
 
     return {
