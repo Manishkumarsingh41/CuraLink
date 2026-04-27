@@ -20,6 +20,30 @@ button:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
 .action-row { display: flex; flex-wrap: wrap; gap: 0.7rem; }
 .action-row button { margin-top: 1.1rem; }
 .download-btn { background: linear-gradient(135deg, #00adca 0%, #0077a8 100%); }
+.autocomplete-group { position: relative; }
+.suggestions-dropdown {
+	position: absolute;
+	top: calc(100% + 0.25rem);
+	left: 0;
+	right: 0;
+	list-style: none;
+	margin: 0;
+	padding: 0.25rem 0;
+	max-height: 180px;
+	overflow-y: auto;
+	z-index: 20;
+	background: #081725;
+	border: 1px solid rgba(0,229,200,0.2);
+	border-radius: 8px;
+	box-shadow: 0 10px 24px rgba(0,0,0,0.35);
+}
+.suggestion-item {
+	padding: 0.45rem 0.9rem;
+	font-size: 0.85rem;
+	color: #9fc6d3;
+	cursor: pointer;
+}
+.suggestion-item:hover { background: rgba(0,229,200,0.12); color: #d6f7ff; }
 .search-card { background: rgba(255,255,255,0.025); border: 1px solid rgba(0,229,200,0.14); border-radius: 14px; padding: 1.6rem; margin-bottom: 1.5rem; box-shadow: 0 0 50px rgba(0,229,200,0.04), inset 0 1px 0 rgba(255,255,255,0.04); }
 .section { margin-top: 0.9rem; }
 .ai-summary { background: rgba(0,229,200,0.04); border: 1px solid rgba(0,229,200,0.18); border-left: 3px solid #00e5c8; border-radius: 0 10px 10px 0; padding: 1rem 1.3rem; margin-bottom: 1rem; font-size: 0.88rem; color: #80aabb; line-height: 1.7; font-style: italic; }

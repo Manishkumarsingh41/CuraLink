@@ -3,10 +3,34 @@ import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas';
 import './index.css';
 
+const diseases = [
+  "Parkinson's disease", 'Diabetes', 'Lung Cancer', "Alzheimer's disease",
+  'Breast Cancer', 'COVID-19', 'Asthma', 'Heart Disease', 'Kidney Failure',
+  'Liver Cirrhosis', 'Tuberculosis', 'Multiple Sclerosis', 'Prostate Cancer',
+  'Migraine', 'Rheumatoid Arthritis', 'Osteoporosis', 'Anemia', 'Depression', 'Eye Disorders',
+];
+
+const queries = [
+  'Deep Brain Stimulation', 'latest treatments', 'immunotherapy advancements',
+  'gene therapy research', 'ongoing clinical trials', 'antiviral drug effectiveness',
+  'causes and prevention', 'recent studies', 'dialysis vs transplant',
+  'drug resistance studies', 'biologic therapies', 'survival rate improvements',
+  'Vitamin D benefits', 'Vitamin B12 deficiency', 'Omega-3 effectiveness',
+  'Vitamin C immunity', 'calcium and Vitamin D', 'iron supplements comparison',
+  'Vitamin E skin benefits', 'Vitamin A deficiency',
+];
+
+const locations = [
+  'India', 'USA', 'Canada', 'UK', 'Germany', 'Australia', 'Bangalore', 'Global',
+];
+
 function App() {
   const [disease, setDisease] = useState('');
   const [query, setQuery] = useState('');
   const [location, setLocation] = useState('');
+  const [showDiseaseSuggestions, setShowDiseaseSuggestions] = useState(false);
+  const [showQuerySuggestions, setShowQuerySuggestions] = useState(false);
+  const [showLocationSuggestions, setShowLocationSuggestions] = useState(false);
 
   const [loading, setLoading] = useState(false);
   const [downloading, setDownloading] = useState(false);
@@ -178,6 +202,40 @@ function App() {
     }
   };
 
+  const getFilteredSuggestions = (list, value) => {
+    const searchTerm = value.trim().toLowerCase();
+    if (!searchTerm) {
+      return [];
+    }
+
+    return list.filter((item) => item.toLowerCase().includes(searchTerm));
+  };
+
+  const renderSuggestions = (list, value, showSuggestions, onSelect) => {
+    const filteredSuggestions = getFilteredSuggestions(list, value);
+
+    if (!showSuggestions || !value.trim() || filteredSuggestions.length === 0) {
+      return null;
+    }
+
+    return (
+      <ul className="suggestions-dropdown">
+        {filteredSuggestions.map((item) => (
+          <li
+            key={item}
+            className="suggestion-item"
+            onMouseDown={(event) => {
+              event.preventDefault();
+              onSelect(item);
+            }}
+          >
+            {item}
+          </li>
+        ))}
+      </ul>
+    );
+  };
+
   return (
     <div className="page">
       <header className="hero">
@@ -187,31 +245,82 @@ function App() {
 
       <div className="search-card section">
         <label htmlFor="disease">Disease</label>
-        <input
-          id="disease"
-          type="text"
-          value={disease}
-          onChange={(e) => setDisease(e.target.value)}
-          placeholder="e.g. lung cancer"
-        />
+        <div className="autocomplete-group">
+          <input
+            id="disease"
+            type="text"
+            value={disease}
+            onChange={(e) => {
+              setDisease(e.target.value);
+              setShowDiseaseSuggestions(Boolean(e.target.value.trim()));
+            }}
+            onFocus={() => {
+              if (disease.trim()) {
+                setShowDiseaseSuggestions(true);
+              }
+            }}
+            onBlur={() => {
+              setTimeout(() => setShowDiseaseSuggestions(false), 100);
+            }}
+            placeholder="e.g. lung cancer"
+          />
+          {renderSuggestions(diseases, disease, showDiseaseSuggestions, (selected) => {
+            setDisease(selected);
+            setShowDiseaseSuggestions(false);
+          })}
+        </div>
 
         <label htmlFor="query">Query</label>
-        <input
-          id="query"
-          type="text"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="e.g. vitamin D"
-        />
+        <div className="autocomplete-group">
+          <input
+            id="query"
+            type="text"
+            value={query}
+            onChange={(e) => {
+              setQuery(e.target.value);
+              setShowQuerySuggestions(Boolean(e.target.value.trim()));
+            }}
+            onFocus={() => {
+              if (query.trim()) {
+                setShowQuerySuggestions(true);
+              }
+            }}
+            onBlur={() => {
+              setTimeout(() => setShowQuerySuggestions(false), 100);
+            }}
+            placeholder="e.g. vitamin D"
+          />
+          {renderSuggestions(queries, query, showQuerySuggestions, (selected) => {
+            setQuery(selected);
+            setShowQuerySuggestions(false);
+          })}
+        </div>
 
         <label htmlFor="location">Location</label>
-        <input
-          id="location"
-          type="text"
-          value={location}
-          onChange={(e) => setLocation(e.target.value)}
-          placeholder="e.g. India"
-        />
+        <div className="autocomplete-group">
+          <input
+            id="location"
+            type="text"
+            value={location}
+            onChange={(e) => {
+              setLocation(e.target.value);
+              setShowLocationSuggestions(Boolean(e.target.value.trim()));
+            }}
+            onFocus={() => {
+              if (location.trim()) {
+                setShowLocationSuggestions(true);
+              }
+            }}
+            onBlur={() => {
+              setTimeout(() => setShowLocationSuggestions(false), 100);
+            }}
+            placeholder="e.g. India"
+          />
+          {renderSuggestions(locations, location, showLocationSuggestions, (selected) => {
+            setLocation(selected);
+            setShowLocationSuggestions(false);
+          })}
+        </div>
 
         <div className="action-row">
           <button type="button" onClick={handleSearch} disabled={loading}>
