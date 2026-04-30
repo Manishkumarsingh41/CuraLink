@@ -94,14 +94,14 @@ Request:
 ## 📁 Project Structure
 
 CuraLink-ai-medical-research-assistant/
-│── backend/
+├── backend/
 │   ├── routes/
 │   ├── services/
 │   ├── utils/
 │   ├── server.js
 │   └── .env
 │
-│── frontend/
+├── frontend/
 │   ├── src/
 │   ├── index.html
 │   └── vite.config.js
