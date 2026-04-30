@@ -93,6 +93,7 @@ Request:
 
 ## 📁 Project Structure
 
+```text
 CuraLink-ai-medical-research-assistant/
 ├── backend/
 │   ├── routes/
@@ -100,15 +101,15 @@ CuraLink-ai-medical-research-assistant/
 │   ├── utils/
 │   ├── server.js
 │   └── .env
-│
+
 ├── frontend/
 │   ├── src/
 │   ├── index.html
 │   └── vite.config.js
-│
-└── README.md
 
----
+└── README.md
+```
+
 
 ## 🛠️ Setup
 
