@@ -113,11 +113,15 @@ CuraLink-ai-medical-research-assistant/
 
 ## 🛠️ Setup
 
-git clone https://github.com/Manishkumarsingh41/CuraLink-ai-medical-research-assistant
+git clone 
+```text
+https://github.com/Manishkumarsingh41/CuraLink-ai-medical-research-assistant
+```
+```text
 cd CuraLink-ai-medical-research-assistant
-
 cd backend && npm install
 cd ../frontend && npm install
+```
 
 ---
 
