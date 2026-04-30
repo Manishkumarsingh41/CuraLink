@@ -81,14 +81,14 @@ AI / Data:
 ## 📡 API Example
 
 POST /api/research/query
-
+```text
 Request:
 {
   "disease": "Lung cancer",
   "query": "immunotherapy",
   "location": "India"
 }
-
+```
 ---
 
 ## 📁 Project Structure
