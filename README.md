@@ -1,233 +1,178 @@
-# 🚀 Curalink — AI Medical Research Assistant
+# 🧠 CuraLink — AI Medical Research Assistant
 
-Curalink is an AI-powered medical research assistant built using the MERN stack and open-source LLMs.
+## 🚀 Production-Ready AI System
 
-It allows users to input a **disease, query, and location**, and returns:
-
-* 📄 Research papers (PubMed + OpenAlex)
-* 🧪 Clinical trials (ClinicalTrials.gov)
-* 🧠 AI-generated structured insights
-* 📥 Downloadable PDF report
+CuraLink is an end-to-end AI-powered medical research assistant that retrieves, ranks, and synthesizes real-world medical data into structured insights using LLMs.
 
 ---
 
 ## 🌐 Live Demo
 
-* 🔗 Frontend: https://cura-link-gamma.vercel.app/
-* 🔗 Backend API: https://curalink-backend-7h86.onrender.com
+- Frontend: https://cura-link-gamma.vercel.app/  
+- Backend: https://curalink-backend-7h86.onrender.com  
 
-> ⚠️ Note: Backend is hosted on a free instance, so the first request may take a few seconds to respond.
+Note: Backend is hosted on a free instance (cold start delay possible)
 
 ---
 
-## 🧠 What This Project Does
+## 🧠 Overview
 
-When a user clicks **Search**:
+CuraLink enables users to query medical topics (disease + query + location) and get:
 
-1. The system expands the query intelligently
-2. Fetches research papers from:
+- Research papers (PubMed, OpenAlex)  
+- Clinical trials (ClinicalTrials.gov)  
+- AI-generated structured summaries  
+- Key insights (non-repetitive, contextual)  
+- Downloadable PDF reports  
 
-   * PubMed
-   * OpenAlex
-3. Fetches clinical trials from ClinicalTrials.gov
-4. Ranks results based on:
+---
 
-   * relevance
-   * recency
-   * source credibility
-5. Sends top results to an open-source LLM
-6. Generates:
+## 🎯 Problem Statement
 
-   * structured AI summary
-   * non-repetitive key insights
-7. Returns everything in a single response
+Medical research is fragmented across multiple platforms:
+- Data is scattered across sources  
+- Requires manual filtering  
+- Difficult to extract actionable insights  
+
+CuraLink solves this using retrieval + ranking + LLM reasoning.
+
+---
+
+## 🧩 System Architecture
+
+User Input  
+→ Query Expansion  
+→ Multi-source Retrieval (PubMed + OpenAlex + ClinicalTrials)  
+→ Ranking Engine (Relevance + Recency + Credibility)  
+→ LLM Processing (Hugging Face)  
+→ Structured Output + Insights + PDF  
 
 ---
 
 ## ⚙️ Tech Stack
 
-### Backend:
+Backend:
+- Node.js, Express  
+- Axios, xml2js  
+- dotenv  
 
-* Node.js
-* Express
-* Axios
-* dotenv
-* xml2js
+Frontend:
+- React, Vite  
 
-### Frontend:
+AI / Data:
+- Hugging Face (LLM inference)  
+- PubMed API  
+- OpenAlex API  
+- ClinicalTrials.gov API  
 
-* React
-* Vite
+---
 
-### AI / Data:
+## 🔥 Key Features
 
-* Hugging Face (LLM)
-* PubMed API
-* OpenAlex API
-* ClinicalTrials.gov API
+- Multi-source retrieval (50–300 candidates → ranked top results)  
+- LLM-powered structured summaries  
+- Intelligent ranking system  
+- PDF report generation  
+- Context-aware follow-up handling  
+- Modular backend design  
+
+---
+
+## 📡 API Example
+
+POST /api/research/query
+
+Request:
+{
+  "disease": "Lung cancer",
+  "query": "immunotherapy",
+  "location": "India"
+}
 
 ---
 
 ## 📁 Project Structure
 
-```text
-Curalink/
-│
-├── backend/
+CuraLink-ai-medical-research-assistant/
+│── backend/
 │   ├── routes/
 │   ├── services/
 │   ├── utils/
 │   ├── server.js
 │   └── .env
 │
-├── frontend/
+│── frontend/
 │   ├── src/
 │   ├── index.html
 │   └── vite.config.js
 │
 └── README.md
-```
 
 ---
 
-## 🛠️ Local Setup
+## 🛠️ Setup
 
-### Prerequisites
+git clone https://github.com/Manishkumarsingh41/CuraLink-ai-medical-research-assistant
+cd CuraLink-ai-medical-research-assistant
 
-* Node.js (v18+)
-* npm
-
----
-
-### Install Dependencies
-
-```bash
-cd backend
-npm install
-
-cd ../frontend
-npm install
-```
+cd backend && npm install
+cd ../frontend && npm install
 
 ---
 
-### Environment Variables
+## 🔐 Environment Variables
 
-Create `backend/.env`:
+Create backend/.env
 
-```env
 HF_API_KEY=your_huggingface_token
 PORT=5000
-```
 
 ---
 
-### Run Locally
+## ▶️ Run
 
-#### Terminal 1 (Backend)
-
-```bash
+Backend:
 cd backend
 node server.js
-```
 
-#### Terminal 2 (Frontend)
-
-```bash
+Frontend:
 cd frontend
 npm run dev
-```
-
-👉 Open: http://127.0.0.1:5173
 
 ---
 
-## 🔌 API Endpoint
+## ⚡ Reliability
 
-### POST `/api/research/query`
-
-#### Request:
-
-```json
-{
-  "disease": "Lung cancer",
-  "query": "immunotherapy",
-  "location": "India"
-}
-```
+- Parallel API calls  
+- Timeout + retry logic  
+- Graceful failure handling  
+- Stable fallback responses  
 
 ---
 
-#### Response Includes:
+## 🏆 Why This Project Stands Out
 
-* `expandedQuery`
-* `results` (research papers)
-* `clinicalTrials`
-* `aiSummary`
-* `insights`
+This is not just a demo.
 
----
+It is a real-world AI system combining:
+- Retrieval  
+- Ranking  
+- LLM reasoning  
 
-## ✨ Key Features
-
-* 🔍 Deep research retrieval (50–300 candidates → ranked top results)
-* 🧠 AI-powered insight generation (non-generic, structured)
-* 🔄 Context-aware follow-up questions
-* 📊 Intelligent ranking system
-* 📥 PDF report generation
-* 🧩 Modular backend architecture
+Demonstrates production-level AI system design.
 
 ---
 
-## ⚠️ Reliability Notes
+## 🚀 Future Improvements
 
-* APIs are called in parallel
-* Timeout and retry handling implemented
-* Partial failures handled gracefully
-* Fallback ensures system never breaks
-
----
-
-## 🐞 Common Issues
-
-### Backend slow on first request
-
-* Due to free hosting (Render)
-* Solution: Open backend URL once before use
+- Vector search (FAISS / Pinecone)  
+- Personalization  
+- Advanced filtering  
+- Multi-language support  
 
 ---
 
-### No data showing
+## 📫 Connect
 
-* Check API connectivity
-* Ensure environment variables are set
-
----
-
-## 🏆 Project Highlights
-
-This is not just a chatbot.
-
-👉 It is a **research + retrieval + reasoning system** that:
-
-* fetches real medical data
-* ranks it intelligently
-* and converts it into useful insights
-
----
-
-## 📌 Future Improvements
-
-* Vector search + embeddings
-* Better personalization
-* Advanced filtering
-* Multi-language support
-
----
-
-## 🙌 Acknowledgement
-
-Built as part of the **Curalink AI Hackathon**
-Focused on real-world AI system design and implementation.
-
----
+- GitHub: https://github.com/Manishkumarsingh41  
+- LinkedIn: https://www.linkedin.com/in/manish-kumar-singh-5a8162214/
