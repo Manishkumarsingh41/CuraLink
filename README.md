@@ -124,22 +124,24 @@ cd ../frontend && npm install
 ## 🔐 Environment Variables
 
 Create backend/.env
-
+```text
 HF_API_KEY=your_huggingface_token
 PORT=5000
-
+```
 ---
 
 ## ▶️ Run
 
 Backend:
+```text
 cd backend
 node server.js
-
+```
 Frontend:
+```text
 cd frontend
 npm run dev
-
+```
 ---
 
 ## ⚡ Reliability
